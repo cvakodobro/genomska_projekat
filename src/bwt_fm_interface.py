@@ -10,13 +10,13 @@ class BwtFmInterface:
         self._tally_factor = tally_factor
         self._text = text + '$'
 
-        # print("Start building suffix array")
+        print("Start building suffix array")
         start = time.time()
         self._suffix_array = self._build_suffix_array()
         end = time.time()
         print("Done building suffix array in", end - start, "seconds")
 
-        # print("Start building BWT")
+        print("Start building BWT")
         start = time.time()
         self._bwt = self._build_bwt()
         end = time.time()
@@ -75,4 +75,5 @@ class BwtFmInterface:
             current_range = self._find_predecessors_in_range(c, current_range[0], current_range[1])
             if current_range == None:
                 return None
-        return [self._position_in_text(i) for i in range(current_range[0], current_range[1] + 1)]
+        # return [self._position_in_text(i) for i in range(current_range[0], current_range[1] + 1)]
+        return current_range[1]-current_range[0]+1

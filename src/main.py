@@ -3,8 +3,8 @@ import time
 import sys
 import psutil
 import argparse
-from os.path import isfile
 from Bio import SeqIO
+from os.path import isfile
 
 import bwt_fm_simple as bfs
 import bwt_fm_optimized as bfo
@@ -23,57 +23,94 @@ def memory_usage():
 
 def main():
     parser = argparse.ArgumentParser(description="Search for patterns in the fasta file")
-    parser.add_argument("-a", "--algorithm", dest="algorithm", choices=["s", "o"],
-                        required=True, help="Choose simple or optimized algorithm")
-    parser.add_argument("-sa_f", "--suffix_array_factor", dest="suffix_array_factor", type=int,
-                        choices=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512], default=128, help="Suffix array factor. Default 128")
-    parser.add_argument("-t_f", "--tally_factor", dest="tally_matrix_factor", type=int,
-                        choices=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512], default=128, help="Tally matrix factor. Default 128")
-    parser.add_argument("-sa", "--suffix_array", dest="suffix_array_file", help="Suffix array file")
-    parser.add_argument("-bwt", "--bwt", dest="bwt_file", help="BWT file")
-    parser.add_argument("-g", "--genome", dest="file", required=True, help="Genome file")
-    parser.add_argument("-p", "--patterns", dest="patterns", nargs='+', required=True,
-                        help="Patterns to be searched for in the genome")
-    args = parser.parse_args()
-
-    if not isfile(args.file):
-        print(args.file, " is not a file")
-        parser.print_usage()
+    genome = input("Full path to genome file: ")
+    if not isfile(genome) or genome=="":
+        print(genome, " is not a file")
         return
 
-    if args.algorithm == "o":
-        if args.suffix_array_file is None:
-            print("Suffix array file is required for optimized algorithm")
-            parser.print_usage()
-            return
-        if not isfile(args.suffix_array_file):
-            print(args.suffix_array_file, " is not a file")
-            parser.print_usage()
-            return
+    while True:
+        algorithm = input("Choose simple (s) or optimized (o) algorithm (default: o): ")
+        if algorithm!="s" and algorithm!="o" and algorithm!="":
+            print("Choose valid algorithm (s or o)")
+            continue
+        else:
+            break
+    if algorithm=="":
+        algorithm="o"
 
-    if args.bwt_file is not None:
-        if not isfile(args.bwt_file):
-            print(args.bwt, " is not a file")
-            parser.print_usage()
-            return
+    if algorithm=="o":
+        while True:
+            try:
+                suffix_array_factor = int(input("Choose suffix array factor"))
+                tally_matrix_factor = int(input("Choose tally matrix factor"))
+            except ValueError:
+                print("Insert valid suffix array factor or tally matrix factor")
+                continue
+            else:
+                break
 
-    print("Start analizing file ", args.file)
-    text = read_sequence(args.file)
+    if algorithm == "o":
+        while True:
+            suffix_array_file = input("Full path to suffix array file: ")
+            if suffix_array_file is None:
+                print("Suffix array file is required for optimized algorithm")
+                continue
+            if not isfile(suffix_array_file):
+                print(suffix_array_file, " is not a file")
+                continue
+            else:
+                break
 
-    if args.algorithm == "s":
-        print("Start making BwtFmSimple object")
-        bwt_fm = bfs.BwtFmSimple(text, suffix_array_file=args.suffix_array_file, bwt_file=args.bwt_file)
+    while True:
+        suffix_array_file = input("Full path to suffix array file: ")
+        suffix_array_file = None if suffix_array_file=="" else suffix_array_file
+        if suffix_array_file is None:
+            if algorithm == "o":
+                print("Suffix array file is required for optimized algorithm")
+                continue
+            else:
+                break
+        if not isfile(suffix_array_file):
+            print(suffix_array_file, " is not a file")
+            continue
+        else:
+            break
+
+    while True:
+        bwt_file = input("Full path to BWT file: ")
+        bwt_file = None if bwt_file == "" else bwt_file
+        if bwt_file is not None:
+            if not isfile(bwt_file):
+                print(bwt_file, " is not a file")
+                continue
+            else:
+                break
+        else:
+            break
+
+    patterns = input("Insert target patterns (use space as a separator): ")
+    if patterns=="":
+        patterns=["ATGCATG", "TCTCTCTA", "TTCACTACTCTCA"]
     else:
-        # print("Start making BwtFmOptimized object")
-        bwt_fm = bfo.BwtFmOptimized(text, args.suffix_array_factor, args.tally_matrix_factor,
-                                    args.suffix_array_file, args.bwt_file)
+        patterns=patterns.split(" ")
 
-    for pattern in args.patterns:
-        # print("Start searching for", pattern)
+    print("Start analizing file ", genome)
+    text = read_sequence(genome)
+
+    if algorithm == "s":
+        print("Start making BwtFmSimple object")
+        bwt_fm = bfs.BwtFmSimple(text, suffix_array_file=suffix_array_file, bwt_file=bwt_file)
+    else:
+        print("Start making BwtFmOptimized object")
+        bwt_fm = bfo.BwtFmOptimized(text, suffix_array_factor, tally_matrix_factor,
+                                    suffix_array_file, bwt_file)
+
+    for pattern in patterns:
+        print("Start searching for", pattern)
         start = time.time()
         positions = bwt_fm.find_pattern(pattern)
         end = time.time()
-        print(pattern, "found on", len(positions) if positions != None else 0, "positions in", end - start, "seconds")
+        print(pattern, "found on", positions if positions is not None else 0, "positions in", end - start, "seconds")
 
     print("Memory usage is", memory_usage(), "MB")
 

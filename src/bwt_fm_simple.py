@@ -28,9 +28,6 @@ class BwtFmSimple(bfi.BwtFmInterface):
     def _get_b_rank(self, bwt_index):
         return self._b_rank[bwt_index]
 
-    def _position_in_text(self, first_column_index):
-        return self._suffix_array[first_column_index]
-
     def _find_predecessors_in_range(self, c, start, end):
         if c == '$' or c not in self._counts_per_char:
             return None

@@ -51,13 +51,6 @@ class BwtFmOptimized(bfi.BwtFmInterface):
             current_index += 1
         return c_count
 
-    def _position_in_text(self, first_column_index):
-        difference = 0
-        while (first_column_index % self._suffix_array_factor != 0):
-            first_column_index = self._left_mapping(first_column_index)
-            difference += 1
-        return (self._suffix_array[first_column_index // self._suffix_array_factor] + difference) % len(self._bwt)
-
     def _find_predecessors_in_range(self, c, start, end):
         if c == '$' or c not in self._counts_per_char:
             return None
